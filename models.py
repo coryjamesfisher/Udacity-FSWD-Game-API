@@ -74,7 +74,27 @@ class Game(ndb.Model):
         game.put()
         return game
 
-    def to_form(self):
+    def move(self, row, col):
+
+        board = self.board
+
+        if row + 1 > len(board) or col + 1 > len(board[0]):
+            raise ValueError("You can not move here. That's not even a spot on the board!")
+
+        if board[row][col] != 0:
+            raise ValueError("You can not move here. This space is already taken!")
+
+        board[row][col] = self.whos_turn
+        self.board = board
+
+        if self.whos_turn == 1:
+            self.whos_turn = 2
+        else:
+            self.whos_turn = 1
+
+        # TODO check gameover
+
+    def to_form(self, message=""):
         """Returns a GameForm representation of the Game"""
 
         form = GameForm()
@@ -88,6 +108,7 @@ class Game(ndb.Model):
         form.whos_turn = self.whos_turn
         form.board = json.dumps(self.board)
         form.game_over = self.game_over
+        form.message = message
         return form
 
     def end_game(self, winner, loser):
@@ -95,6 +116,15 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.put()
+
+        # winnerStats = UserStats(user=winner, won=True)
+        # loserStats = UserStats(user=loser, won=False)
+        #
+        # winnerStats.put()
+        # loserStats.put()
+        #
+
+
         # Add the game to the score 'board'
         # score = Score(user=self.user, date=date.today(), won=won,
         #               guesses=self.attempts_allowed - self.attempts_remaining)
@@ -126,6 +156,7 @@ class GameForm(messages.Message):
     whos_turn = messages.IntegerField(8, required=True)
     board = messages.StringField(9, required=True)
     game_over = messages.BooleanField(10, required=True)
+    message = messages.StringField(11, required=True)
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""
@@ -137,7 +168,9 @@ class NewGameForm(messages.Message):
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
-    guess = messages.IntegerField(1, required=True)
+    player_name = messages.StringField(1, required=True)
+    move_row = messages.IntegerField(2, required=True)
+    move_col = messages.IntegerField(3, required=True)
 
 
 class ScoreForm(messages.Message):

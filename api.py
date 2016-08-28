@@ -85,7 +85,7 @@ class TicTacToeApi(remote.Service):
         """Return the current game state."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
-            return game.to_form('Time to make a move!')
+            return game.to_form()
         else:
             raise endpoints.NotFoundException('Game not found!')
 
@@ -100,22 +100,20 @@ class TicTacToeApi(remote.Service):
         if game.game_over:
             return game.to_form('Game already over!')
 
-        game.attempts_remaining -= 1
-        if request.guess == game.target:
-            game.end_game(True)
-            return game.to_form('You win!')
+        if (game.whos_turn == 1 and game.player_one.get().name != request.player_name) or \
+            (game.whos_turn == 2 and game.player_two.get().name != request.player_name):
+            return game.to_form('Please wait your turn!')
 
-        if request.guess < game.target:
-            msg = 'Too low!'
-        else:
-            msg = 'Too high!'
-
-        if game.attempts_remaining < 1:
-            game.end_game(False)
-            return game.to_form(msg + ' Game over!')
-        else:
+        try:
+            game.move(request.move_row, request.move_col)
             game.put()
-            return game.to_form(msg)
+        except ValueError as error:
+            return game.to_form(error.message)
+
+        if game.game_over == True:
+            return game.to_form("Thank you for playing. The match has ended and you have won!")
+
+        return game.to_form("Move accepted. Please wait for your next turn.")
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',
