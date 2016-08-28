@@ -87,12 +87,36 @@ class Game(ndb.Model):
         board[row][col] = self.whos_turn
         self.board = board
 
+        if self.check_game_over(self.whos_turn, row, col):
+            self.game_over = True
+            return
+
         if self.whos_turn == 1:
             self.whos_turn = 2
         else:
             self.whos_turn = 1
 
-        # TODO check gameover
+    def check_game_over(self, last_move_user, last_move_row, last_move_col):
+
+        # Check column win
+        for col in range(0, self.cols):
+
+            if self.board[last_move_row][col] != last_move_user:
+                break
+            elif col == (self.cols - 1):
+                return True
+
+        # Check row win
+        for row in xrange(0, self.rows):
+
+            if self.board[row][last_move_col] != last_move_user:
+                break
+            elif row == (self.rows - 1):
+                return True
+
+        return False
+
+        # TODO check diagonal
 
     def to_form(self, message=""):
         """Returns a GameForm representation of the Game"""
