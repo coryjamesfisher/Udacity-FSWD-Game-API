@@ -99,24 +99,72 @@ class Game(ndb.Model):
     def check_game_over(self, last_move_user, last_move_row, last_move_col):
 
         # Check column win
+        in_col = 0
+
         for col in range(0, self.cols):
 
             if self.board[last_move_row][col] != last_move_user:
-                break
-            elif col == (self.cols - 1):
+                in_col = 0
+            else:
+                in_col += 1
+
+            if in_col == self.winning_length:
                 return True
 
+            # Impossible to create line on this row
+            if in_col + (self.cols - col) < self.winning_length:
+                break
+
         # Check row win
+        in_row = 0
         for row in xrange(0, self.rows):
 
             if self.board[row][last_move_col] != last_move_user:
-                break
-            elif row == (self.rows - 1):
+                in_row = 0
+            else:
+                in_row += 1
+
+            if in_row == self.winning_length:
                 return True
 
-        return False
+            # Impossible to create line in this column
+            if in_row + (self.rows - row) < self.winning_length:
+                break
 
-        # TODO check diagonal
+        # Check left diag win
+        diff = abs(last_move_col - last_move_row)
+        in_left_diag = 0
+        for row in xrange(0, self.rows):
+
+            col = diff + row
+            if col < 0 or col >= self.cols:
+                pass
+            elif self.board[row][col] == last_move_user:
+                in_left_diag += 1
+
+                if in_left_diag == self.winning_length:
+                    return True
+            else:
+                in_left_diag = 0
+
+        # Check right diag win
+        in_right_diag = 0
+
+        for row in xrange(0, self.rows):
+
+            col = self.cols - (diff + row)
+            if col < 0 or col >= self.cols:
+                pass
+            elif self.board[row][col] == last_move_user:
+                in_right_diag += 1
+
+                if in_right_diag == self.winning_length:
+                    return True
+
+            else:
+                in_right_diag = 0
+
+        return False
 
     def to_form(self, message=""):
         """Returns a GameForm representation of the Game"""
