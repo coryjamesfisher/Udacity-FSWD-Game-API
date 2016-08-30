@@ -20,6 +20,7 @@ class Game(ndb.Model):
 
     player_one = ndb.KeyProperty(required=True, kind='User')
     player_two = ndb.KeyProperty(required=True, kind='User')
+    winner = ndb.KeyProperty(required=False, kind='User')
     freak_factor = ndb.IntegerProperty(required=True)
     rows = ndb.IntegerProperty(required=True)
     cols = ndb.IntegerProperty(required=True)
@@ -64,6 +65,7 @@ class Game(ndb.Model):
 
         game = Game(player_one=player_one,
                     player_two=player_two,
+                    winner=None,
                     freak_factor=freak_factor,
                     rows=rows,
                     cols=cols,
@@ -87,7 +89,12 @@ class Game(ndb.Model):
         board[row][col] = self.whos_turn
         self.board = board
 
-        if self.check_game_over(self.whos_turn, row, col):
+        if self.check_did_win(self.whos_turn, row, col):
+            self.winner = self.player_one if self.whos_turn == 1 else self.player_two
+            self.game_over = True
+            return
+
+        if self.check_is_draw():
             self.game_over = True
             return
 
@@ -96,7 +103,15 @@ class Game(ndb.Model):
         else:
             self.whos_turn = 1
 
-    def check_game_over(self, last_move_user, last_move_row, last_move_col):
+    def check_is_draw(self):
+
+        for row in self.board:
+            for col in row:
+                if col != 1 and col != 2:
+                    return False
+        return True
+
+    def check_did_win(self, last_move_user, last_move_row, last_move_col):
 
         # Check column win
         in_col = 0
@@ -173,6 +188,7 @@ class Game(ndb.Model):
         form.urlsafe_key = self.key.urlsafe()
         form.player_one_name = self.player_one.get().name
         form.player_two_name = self.player_two.get().name
+        form.winner_name = self.winner.get().name if self.winner != None else ""
         form.freak_factor = self.freak_factor
         form.rows = self.rows
         form.cols = self.cols
@@ -229,6 +245,7 @@ class GameForm(messages.Message):
     board = messages.StringField(9, required=True)
     game_over = messages.BooleanField(10, required=True)
     message = messages.StringField(11, required=True)
+    winner_name = messages.StringField(12, required=False)
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""
