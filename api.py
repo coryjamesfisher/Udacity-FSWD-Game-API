@@ -9,6 +9,7 @@ import logging
 import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
+from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
 
 from models import User, Game, Score
@@ -134,7 +135,8 @@ class TicTacToeApi(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        scores = Score.query(Score.user == user.key)
+        scores = Score.query(ndb.OR(Score.player_one == user.key,
+                                    Score.player_two == user.key))
         return ScoreForms(items=[score.to_form() for score in scores])
 
     @endpoints.method(response_message=StringMessage,
