@@ -23,15 +23,15 @@ GET_GAME_REQUEST = endpoints.ResourceContainer(
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
     urlsafe_game_key=messages.StringField(1),)
-USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
-                                           email=messages.StringField(2))
+CREATE_USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1), email=messages.StringField(2))
+USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
 
 MEMCACHE_NUM_ACTIVE_GAMES = 'NUM_ACTIVE_GAMES'
 
 @endpoints.api(name='tic_tac_toe', version='v1')
 class TicTacToeApi(remote.Service):
     """Game API"""
-    @endpoints.method(request_message=USER_REQUEST,
+    @endpoints.method(request_message=CREATE_USER_REQUEST,
                       response_message=StringMessage,
                       path='user',
                       name='create_user',
@@ -43,6 +43,10 @@ class TicTacToeApi(remote.Service):
                     'A User with that name already exists!')
         user = User(name=request.user_name, email=request.email)
         user.put()
+        score_id = ndb.Model.allocate_ids(size=1, parent=user.key)[0]
+        score_key = ndb.Key(Score, score_id, parent=user.key)
+        score = Score(key=score_key, wins=0, losses=0)
+        score.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
 
@@ -129,16 +133,15 @@ class TicTacToeApi(remote.Service):
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=ScoreForms,
                       path='scores/user/{user_name}',
-                      name='get_user_scores',
+                      name='get_user_score',
                       http_method='GET')
-    def get_user_scores(self, request):
+    def get_user_score(self, request):
         """Returns all of an individual User's scores"""
         user = User.query(User.name == request.user_name).get()
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        scores = Score.query(ndb.OR(Score.player_one == user.key,
-                                    Score.player_two == user.key))
+        scores = Score.query(ancestor=user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
 
     @endpoints.method(response_message=StringMessage,

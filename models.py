@@ -207,31 +207,35 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.winner = winner
-        self.put()
 
-
-        if winner is None:
-            result = None
+        if winner is not None:
+            winner_score = Score.query(ancestor=winner).get()
+            loser_score = Score.query(ancestor=loser).get()
+            winner_score.wins += 1
+            loser_score.losses += 1
+            winner_score.put()
+            loser_score.put()
         else:
-            result = winner
+            player_one_score = Score.query(ancestor=self.player_one).get()
+            player_two_score = Score.query(ancestor=self.player_two).get()
+            player_one_score.ties += 1
+            player_two_score.ties += 1
+            player_one_score.put()
+            player_two_score.put()
 
-        # Add the game to the score 'board'
-        score = Score(date=date.today(), player_one=self.player_one, player_two=self.player_two, result=result)
-        score.put()
+        self.put()
 
 
 class Score(ndb.Model):
     """Score object"""
-    date = ndb.DateProperty(required=True)
-    player_one = ndb.KeyProperty(required=True, kind='User')
-    player_two = ndb.KeyProperty(required=True, kind='User')
-    result = ndb.KeyProperty(required=False, kind='User')
+    date = ndb.DateProperty(required=True, auto_now=True)
+    wins = ndb.IntegerProperty(required=True)
+    losses = ndb.IntegerProperty(required=True)
 
     def to_form(self):
 
-        result_string = "%s won the game" % self.result.get().name if self.result else "The game was a tie"
-        return ScoreForm(player_one_name=self.player_one.get().name, player_two_name=self.player_two.get().name,
-                         date=str(self.date), result_string=result_string)
+        player_name = self.key.parent().get().name
+        return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses)
 
 
 class GameForm(messages.Message):
@@ -267,10 +271,10 @@ class MakeMoveForm(messages.Message):
 
 class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
-    player_one_name = messages.StringField(1, required=True)
-    player_two_name = messages.StringField(2, required=True)
-    date = messages.StringField(3, required=True)
-    result_string = messages.StringField(4, required=True)
+    player_name = messages.StringField(1, required=True)
+    wins = messages.IntegerField(2, required=True)
+    losses = messages.IntegerField(3, required=True)
+
 
 class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
