@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for i in {1..1000000}
+do
+	curl -vvv 'http://127.0.0.1:8080/_ah/api/tic_tac_toe/v1/game?alt=json' -H 'Origin: http://127.0.0.1:8080' -H 'Accept-Encoding: gzip, deflate' -H 'X-Origin: https://apis-explorer.appspot.com' -H 'X-ClientDetails: appVersion=5.0%20(X11%3B%20Linux%20x86_64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F53.0.2785.92%20Safari%2F537.36&platform=Linux%20x86_64&userAgent=Mozilla%2F5.0%20(X11%3B%20Linux%20x86_64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F53.0.2785.92%20Safari%2F537.36' -H 'X-Goog-Encode-Response-If-Executable: base64' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.92 Safari/537.36' -H 'Content-Type: application/json' -H 'Accept: */*' -H 'X-JavaScript-User-Agent: google-api-javascript-client/1.1.0-beta' -H 'Referer: http://127.0.0.1:8080/_ah/api/static/proxy.html?jsh=m%3B%2F_%2Fscs%2Fapps-static%2F_%2Fjs%2Fk%3Doz.gapi.en_US.TL3akGn5RQ4.O%2Fm%3D__features__%2Fam%3DAQ%2Frt%3Dj%2Fd%3D1%2Frs%3DAGLTcCMu5BTH-ydAfrvsdx2yJXyTLHHJvQ' -H 'Accept-Language: en-US,en;q=0.8' -H 'Connection: keep-alive' -H 'X-Referer: https://apis-explorer.appspot.com' --data-binary $'{"freak_factor": "1","player_one_name": "testuser1","player_two_name": "testuser2"}' --compressed
+done

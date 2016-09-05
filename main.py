@@ -35,7 +35,19 @@ class UpdateAverageMovesRemaining(webapp2.RequestHandler):
         self.response.set_status(204)
 
 
+class IncrementActiveGames(webapp2.RequestHandler):
+    def post(self):
+        TicTacToeApi.increment_active_games()
+
+
+class DecrementActiveGames(webapp2.RequestHandler):
+    def post(self):
+        TicTacToeApi.decrement_active_games()
+
+
 app = webapp2.WSGIApplication([
     ('/crons/send_reminder', SendReminderEmail),
     ('/tasks/cache_average_attempts', UpdateAverageMovesRemaining),
+    ('/tasks/increment_active_games', IncrementActiveGames),
+    ('/tasks/decrement_active_games', DecrementActiveGames)
 ], debug=True)

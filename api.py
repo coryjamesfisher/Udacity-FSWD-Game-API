@@ -26,7 +26,7 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
 
-MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
+MEMCACHE_NUM_ACTIVE_GAMES = 'NUM_ACTIVE_GAMES'
 
 @endpoints.api(name='tic_tac_toe', version='v1')
 class TicTacToeApi(remote.Service):
@@ -75,6 +75,7 @@ class TicTacToeApi(remote.Service):
         # This operation is not needed to complete the creation of a new game
         # so it is performed out of sequence.
         #taskqueue.add(url='/tasks/cache_average_attempts')
+        taskqueue.add(url='/tasks/increment_active_games')
         return game.to_form()
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
@@ -112,6 +113,7 @@ class TicTacToeApi(remote.Service):
             return game.to_form(error.message)
 
         if game.game_over == True:
+            taskqueue.add(url='/tasks/decrement_active_games')
             return game.to_form("Thank you for playing. The match has ended and you have won!")
 
         return game.to_form("Move accepted. Please wait for your next turn.")
@@ -140,24 +142,30 @@ class TicTacToeApi(remote.Service):
         return ScoreForms(items=[score.to_form() for score in scores])
 
     @endpoints.method(response_message=StringMessage,
-                      path='games/average_attempts',
-                      name='get_average_attempts_remaining',
+                      path='games/active_games',
+                      name='get_num_active_games',
                       http_method='GET')
-    def get_average_attempts(self, request):
+    def get_num_active_games(self, request):
         """Get the cached average moves remaining"""
-        return StringMessage(message=memcache.get(MEMCACHE_MOVES_REMAINING) or '')
+        cached_num_games = memcache.get(MEMCACHE_NUM_ACTIVE_GAMES)
+
+        if isinstance(cached_num_games, int) == False:
+            cached_num_games = Game.query(Game.game_over == False).count()
+            memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, cached_num_games)
+            print cached_num_games
+            print "had to query for cached games"
+        else:
+            print "already had cached_games"
+
+        return StringMessage(message="Found " + str(cached_num_games) + " active games")
 
     @staticmethod
-    def _cache_average_attempts():
-        """Populates memcache with the average moves remaining of Games"""
-        games = Game.query(Game.game_over == False).fetch()
-        if games:
-            count = len(games)
-            total_attempts_remaining = sum([game.attempts_remaining
-                                        for game in games])
-            average = float(total_attempts_remaining)/count
-            memcache.set(MEMCACHE_MOVES_REMAINING,
-                         'The average moves remaining is {:.2f}'.format(average))
+    def increment_active_games():
+        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) + 1)
+
+    @staticmethod
+    def decrement_active_games(self):
+        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) - 1)
 
 
 api = endpoints.api_server([TicTacToeApi])
