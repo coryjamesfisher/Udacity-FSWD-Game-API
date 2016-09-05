@@ -231,11 +231,12 @@ class Score(ndb.Model):
     date = ndb.DateProperty(required=True, auto_now=True)
     wins = ndb.IntegerProperty(required=True)
     losses = ndb.IntegerProperty(required=True)
+    ties = ndb.IntegerProperty(required=True)
 
     def to_form(self):
 
         player_name = self.key.parent().get().name
-        return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses)
+        return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses, ties=self.ties)
 
 
 class GameForm(messages.Message):
@@ -280,6 +281,7 @@ class ScoreForm(messages.Message):
     player_name = messages.StringField(1, required=True)
     wins = messages.IntegerField(2, required=True)
     losses = messages.IntegerField(3, required=True)
+    ties = messages.IntegerField(4, required=True)
 
 
 class ScoreForms(messages.Message):

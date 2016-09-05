@@ -45,7 +45,7 @@ class TicTacToeApi(remote.Service):
         user.put()
         score_id = ndb.Model.allocate_ids(size=1, parent=user.key)[0]
         score_key = ndb.Key(Score, score_id, parent=user.key)
-        score = Score(key=score_key, wins=0, losses=0)
+        score = Score(key=score_key, wins=0, losses=0, ties=0)
         score.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
@@ -142,6 +142,14 @@ class TicTacToeApi(remote.Service):
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
         scores = Score.query(ancestor=user.key)
+        return ScoreForms(items=[score.to_form() for score in scores])
+
+    @endpoints.method(response_message=ScoreForms,
+                      path='user/rankings',
+                      name='get_user_rankings',
+                      http_method='GET')
+    def get_user_rankings(self, request):
+        scores = Score.query().order(-Score.wins, -Score.ties, +Score.losses)
         return ScoreForms(items=[score.to_form() for score in scores])
 
     @endpoints.method(request_message=USER_REQUEST,
