@@ -18,7 +18,7 @@ from models import StringMessage, NewGameForm, GameForm, GameForms, MakeMoveForm
 from utils import get_by_urlsafe
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
-GET_GAME_REQUEST = endpoints.ResourceContainer(
+GAME_REQUEST = endpoints.ResourceContainer(
         urlsafe_game_key=messages.StringField(1),)
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
@@ -82,7 +82,7 @@ class TicTacToeApi(remote.Service):
         taskqueue.add(url='/tasks/increment_active_games')
         return game.to_form()
 
-    @endpoints.method(request_message=GET_GAME_REQUEST,
+    @endpoints.method(request_message=GAME_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
                       name='get_game',
@@ -182,7 +182,27 @@ class TicTacToeApi(remote.Service):
         else:
             print "already had cached_games"
 
-        return StringMessage(message="Found " + str(cached_num_games) + " active games")
+        return StringMessage(message="Found " + str(cached_num_games) + " active games.")
+
+    @endpoints.method(request_message=GAME_REQUEST,
+                      response_message=StringMessage,
+                      path='games/{urlsafe_game_key}/cancel',
+                      name='cancel_game',
+                      http_method='POST')
+    def cancel_game(self, request):
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if not game:
+            raise endpoints.NotFoundException('Game not found!')
+
+        if game.game_over is True:
+            raise endpoints.ForbiddenException('You can not cancel this game as it is already over!')
+
+        # Save the game.
+        # A game with no winner and with game_over=True is a cancelled game.
+        game.game_over = True
+        game.put()
+
+        return StringMessage(message="The game was cancelled successfully.")
 
     @staticmethod
     def increment_active_games():
