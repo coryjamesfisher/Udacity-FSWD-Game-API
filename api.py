@@ -13,7 +13,7 @@ from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
 
 from models import User, Game, Score
-from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
+from models import StringMessage, NewGameForm, GameForm, GameForms, MakeMoveForm,\
     ScoreForms
 from utils import get_by_urlsafe
 
@@ -143,6 +143,20 @@ class TicTacToeApi(remote.Service):
                     'A User with that name does not exist!')
         scores = Score.query(ancestor=user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
+
+    @endpoints.method(request_message=USER_REQUEST,
+                      response_message=GameForms,
+                      path='user/games',
+                      name='get_user_games',
+                      http_method='GET')
+    def get_user_games(self, request):
+        """Returns all of the users active games"""
+        user = User.query(User.name == request.user_name).get()
+        if not user:
+            raise endpoints.NotFoundException(
+                'User name is required')
+        games = Game.query(ndb.AND(ndb.OR(Game.player_one == user.key, Game.player_two == user.key), Game.game_over == False))
+        return GameForms(items=[game.to_form() for game in games])
 
     @endpoints.method(response_message=StringMessage,
                       path='games/active_games',

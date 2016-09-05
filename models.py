@@ -254,6 +254,12 @@ class GameForm(messages.Message):
     message = messages.StringField(11, required=True)
     winner_name = messages.StringField(12, required=False)
 
+
+class GameForms(messages.Message):
+    """Return multiple GameForms"""
+    items = messages.MessageField(GameForm, 1, repeated=True)
+
+
 class NewGameForm(messages.Message):
     """Used to create a new game"""
 
