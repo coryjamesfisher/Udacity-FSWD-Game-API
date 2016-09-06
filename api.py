@@ -42,9 +42,7 @@ class TicTacToeApi(remote.Service):
                     'A User with that name already exists!')
         user = User(name=request.user_name, email=request.email)
         user.put()
-        score_id = ndb.Model.allocate_ids(size=1, parent=user.key)[0]
-        score_key = ndb.Key(Score, score_id, parent=user.key)
-        score = Score(key=score_key, wins=0, losses=0, ties=0)
+        score = Score(parent=user.key, wins=0, losses=0, ties=0)
         score.put()
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
@@ -122,7 +120,7 @@ class TicTacToeApi(remote.Service):
 
         if game.game_over is True:
             taskqueue.add(url='/tasks/decrement_active_games')
-            message = "Thank you for playing. The match has ended and you have won!"
+            message = "Thank you for playing. " + request.player_name + " has won the game."
         else:
             message = "Move accepted. Please wait for your next turn."
 
