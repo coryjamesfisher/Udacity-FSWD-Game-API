@@ -2,8 +2,6 @@
 entities used by the Game. Because these classes are also regular Python
 classes they can include methods (such as 'to_form' and 'new_game')."""
 
-import random
-from datetime import date
 from protorpc import messages
 from google.appengine.ext import ndb
 import json
@@ -237,6 +235,12 @@ class Score(ndb.Model):
 
         player_name = self.key.parent().get().name
         return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses, ties=self.ties)
+
+class GameHistory(ndb.Model):
+
+    """Game History Object"""
+    history = ndb.PickleProperty(required=True, default=[])
+    messages = ndb.PickleProperty(required=True, default=[])
 
 
 class GameForm(messages.Message):

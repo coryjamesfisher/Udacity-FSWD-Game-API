@@ -5,14 +5,13 @@ move game logic to another file. Ideally the API will be simple, concerned
 primarily with communication to/from the API's users."""
 
 
-import logging
 import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
 
-from models import User, Game, Score
+from models import User, Game, Score, GameHistory
 from models import StringMessage, NewGameForm, GameForm, GameForms, MakeMoveForm,\
     ScoreForms
 from utils import get_by_urlsafe
@@ -75,12 +74,16 @@ class TicTacToeApi(remote.Service):
         except ValueError:
             raise endpoints.BadRequestException('You two already have a game together')
 
-        # Use a task queue to update the average attempts remaining.
-        # This operation is not needed to complete the creation of a new game
-        # so it is performed out of sequence.
-        #taskqueue.add(url='/tasks/cache_average_attempts')
+        # Increment active count of games
         taskqueue.add(url='/tasks/increment_active_games')
-        return game.to_form()
+
+        message = "Game created successfully"
+        game_history = GameHistory(parent=game.key)
+        game_history.history.append(game)
+        game_history.messages.append(message)
+        game_history.put()
+
+        return game.to_form(message)
 
     @endpoints.method(request_message=GAME_REQUEST,
                       response_message=GameForm,
@@ -113,14 +116,22 @@ class TicTacToeApi(remote.Service):
         try:
             game.move(request.move_row, request.move_col)
             game.put()
+
         except ValueError as error:
             return game.to_form(error.message)
 
-        if game.game_over == True:
+        if game.game_over is True:
             taskqueue.add(url='/tasks/decrement_active_games')
-            return game.to_form("Thank you for playing. The match has ended and you have won!")
+            message = "Thank you for playing. The match has ended and you have won!"
+        else:
+            message = "Move accepted. Please wait for your next turn."
 
-        return game.to_form("Move accepted. Please wait for your next turn.")
+        game_history = GameHistory.query(ancestor=game.key).get()
+        game_history.history.append(game)
+        game_history.messages.append(message)
+        game_history.put()
+
+        return game.to_form(message)
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',
@@ -204,12 +215,32 @@ class TicTacToeApi(remote.Service):
 
         return StringMessage(message="The game was cancelled successfully.")
 
+    @endpoints.method(request_message=GAME_REQUEST,
+                      response_message=GameForms,
+                      path='games/{urlsafe_game_key}/history',
+                      name='game_history',
+                      http_method='GET')
+    def game_history(self, request):
+
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if not game:
+            raise endpoints.NotFoundException('Game not found!')
+
+        game_history = GameHistory.query(ancestor=game.key).get()
+
+        items = []
+        for index, item in enumerate(game_history.history):
+            items.append(item.to_form(game_history.messages[index]))
+
+        return GameForms(items=items)
+
+
     @staticmethod
     def increment_active_games():
         memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) + 1)
 
     @staticmethod
-    def decrement_active_games(self):
+    def decrement_active_games():
         memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) - 1)
 
 
