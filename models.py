@@ -31,9 +31,6 @@ class Game(ndb.Model):
     def new_game(cls, player_one, player_two, freak_factor):
         """Creates and returns a new game"""
 
-        # @TODO CHECK FOR EXISTING GAME
-
-
         if freak_factor % 3 == 0:
             rows = 5
             cols = 5
@@ -189,7 +186,7 @@ class Game(ndb.Model):
         form.urlsafe_key = self.key.urlsafe()
         form.player_one_name = self.player_one.get().name
         form.player_two_name = self.player_two.get().name
-        form.winner_name = self.winner.get().name if self.winner != None else ""
+        form.winner_name = self.winner.get().name if self.winner is not None else ""
         form.freak_factor = self.freak_factor
         form.rows = self.rows
         form.cols = self.cols
@@ -235,6 +232,7 @@ class Score(ndb.Model):
 
         player_name = self.key.parent().get().name
         return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses, ties=self.ties)
+
 
 class GameHistory(ndb.Model):
 

@@ -11,7 +11,9 @@ from models import Game
 
 
 class SendReminderEmail(webapp2.RequestHandler):
-    def get(self):
+
+    @staticmethod
+    def get():
         """Send a reminder email to the user who's turn it is for each game that is active.
         Called every hour using a cron job"""
         app_id = app_identity.get_application_id()
@@ -29,7 +31,8 @@ class SendReminderEmail(webapp2.RequestHandler):
             # If the user has an email send them a little reminder
             if user.email is not None:
                 subject = 'Freaky TicTacToe Reminder'
-                body = 'Hello {}, it is currently your turn in the game [ {} ]. Please return to the game.'.format(user.name, game.key.urlsafe())
+                body = 'Hello {}, it is currently your turn in the game [ {} ]. Please return to the game.' \
+                    .format(user.name, game.key.urlsafe())
                 mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
                                user.email,
                                subject,
@@ -37,12 +40,16 @@ class SendReminderEmail(webapp2.RequestHandler):
 
 
 class IncrementActiveGames(webapp2.RequestHandler):
-    def post(self):
+
+    @staticmethod
+    def post():
         TicTacToeApi.increment_active_games()
 
 
 class DecrementActiveGames(webapp2.RequestHandler):
-    def post(self):
+
+    @staticmethod
+    def post():
         TicTacToeApi.decrement_active_games()
 
 

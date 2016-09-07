@@ -27,6 +27,7 @@ USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
 
 MEMCACHE_NUM_ACTIVE_GAMES = 'NUM_ACTIVE_GAMES'
 
+
 @endpoints.api(name='tic_tac_toe', version='v1')
 class TicTacToeApi(remote.Service):
     """Game API"""
@@ -108,7 +109,7 @@ class TicTacToeApi(remote.Service):
             return game.to_form('Game already over!')
 
         if (game.whos_turn == 1 and game.player_one.get().name != request.player_name) or \
-            (game.whos_turn == 2 and game.player_two.get().name != request.player_name):
+           (game.whos_turn == 2 and game.player_two.get().name != request.player_name):
             return game.to_form('Please wait your turn!')
 
         try:
@@ -172,7 +173,8 @@ class TicTacToeApi(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                 'User name is required')
-        games = Game.query(ndb.AND(ndb.OR(Game.player_one == user.key, Game.player_two == user.key), Game.game_over == False))
+        games = Game.query(
+            ndb.AND(ndb.OR(Game.player_one == user.key, Game.player_two == user.key), Game.game_over == False))
         return GameForms(items=[game.to_form() for game in games])
 
     @endpoints.method(response_message=StringMessage,
@@ -183,7 +185,7 @@ class TicTacToeApi(remote.Service):
         """Get the cached average moves remaining"""
         cached_num_games = memcache.get(MEMCACHE_NUM_ACTIVE_GAMES)
 
-        if isinstance(cached_num_games, int) == False:
+        if isinstance(cached_num_games, int) is False:
             cached_num_games = Game.query(Game.game_over == False).count()
             memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, cached_num_games)
             print cached_num_games
@@ -232,7 +234,6 @@ class TicTacToeApi(remote.Service):
 
         return GameForms(items=items)
 
-
     @staticmethod
     def increment_active_games():
 
@@ -245,6 +246,7 @@ class TicTacToeApi(remote.Service):
     @staticmethod
     def decrement_active_games():
         active_games = memcache.get(MEMCACHE_NUM_ACTIVE_GAMES)
+
         if isinstance(active_games, int) is False:
             active_games = Game.query(Game.game_over == False).count()
 
