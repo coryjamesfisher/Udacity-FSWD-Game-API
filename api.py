@@ -235,11 +235,20 @@ class TicTacToeApi(remote.Service):
 
     @staticmethod
     def increment_active_games():
-        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) + 1)
+
+        active_games = memcache.get(MEMCACHE_NUM_ACTIVE_GAMES)
+        if isinstance(active_games, int) is False:
+            active_games = Game.query(Game.game_over == False).count()
+
+        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, active_games + 1)
 
     @staticmethod
     def decrement_active_games():
-        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, memcache.get(MEMCACHE_NUM_ACTIVE_GAMES) - 1)
+        active_games = memcache.get(MEMCACHE_NUM_ACTIVE_GAMES)
+        if isinstance(active_games, int) is False:
+            active_games = Game.query(Game.game_over == False).count()
+
+        memcache.set(MEMCACHE_NUM_ACTIVE_GAMES, active_games - 1)
 
 
 api = endpoints.api_server([TicTacToeApi])
