@@ -31,6 +31,7 @@ class Game(ndb.Model):
     def new_game(cls, player_one, player_two, freak_factor):
         """Creates and returns a new game"""
 
+        # Change number of rows and cols based on freak_factor
         if freak_factor % 3 == 0:
             rows = 5
             cols = 5
@@ -72,6 +73,7 @@ class Game(ndb.Model):
         return game
 
     def move(self, row, col):
+        """This method handles a move for the player who's turn it is"""
 
         board = self.board
 
@@ -81,6 +83,7 @@ class Game(ndb.Model):
         if board[row][col] != 0:
             raise ValueError("You can not move here. This space is already taken!")
 
+        # Mark the move on the board
         board[row][col] = self.whos_turn
         self.board = board
 
@@ -96,13 +99,16 @@ class Game(ndb.Model):
             self.end_game()
             return
 
+        # Player move is done set it to the next player's turn
         if self.whos_turn == 1:
             self.whos_turn = 2
         else:
             self.whos_turn = 1
 
     def check_is_draw(self):
+        """Check if the game is a draw"""
 
+        # If any space is unmarked the game is not a draw
         for row in self.board:
             for col in row:
                 if col != 1 and col != 2:
@@ -110,6 +116,7 @@ class Game(ndb.Model):
         return True
 
     def check_did_win(self, last_move_user, last_move_row, last_move_col):
+        """Check if a user has won the game"""
 
         # Check column win
         in_col = 0
@@ -198,8 +205,7 @@ class Game(ndb.Model):
         return form
 
     def end_game(self, winner=None, loser=None):
-        """Ends the game - if won is True, the player won. - if won is False,
-        the player lost."""
+        """Ends the game and records the scores - if winner is None then the game is a tie"""
         self.game_over = True
         self.winner = winner
 

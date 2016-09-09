@@ -11,14 +11,47 @@
  
  
 ##Game Description:
-Guess a number is a simple guessing game. Each game begins with a random 'target'
-number between the minimum and maximum values provided, and a maximum number of
-'attempts'. 'Guesses' are sent to the `make_move` endpoint which will reply
-with either: 'too low', 'too high', 'you win', or 'game over' (if the maximum
-number of attempts is reached).
-Many different Guess a Number games can be played by many different Users at any
-given time. Each game can be retrieved or played by using the path parameter
-`urlsafe_game_key`.
+Extreme Tic-Tac-Toe is a small twist on a classic two player game. In each game
+players take turns marking a spot in a 2 dimensional grid. Traditionally the grids
+are 3 x 3 and it takes a player placing their mark on either a full row, column,
+left diagonal, or right diagonal to win the game. When a game board is filled with
+neither player having achieved the winning criteria the game is declared a draw. The
+only difference with extreme tic-tac-toe is that a freak factor is added which impacts
+both the size of the board and the number of marks in a sequence required to win the game.
+
+The rules based on freak factor are as follows.
+Grid Size Rules:
+freak_factor divisible by 3: 5 x 5 grid
+freak_factor divisible by 2: 4 x 4 grid
+freak_factor 0 or 1: 3 x 3 grid
+
+Winning Sequence Count Rules:
+freak_factor >= 10: Number of marks equal to the lowest between row and column length
+(this is designed with rectangular grids in mind)
+freak_factor < 10: 3 marks
+
+Score Rules:
+The game records wins, losses, and draws for each user.
+Users are ranked via the following algorithm:
+wins descending, losses descending, draws ascending.
+This is such that 2 users with the same win ratio can be ranked based on secondary
+and tertiary criteria. If all of the 3 factors match then the order will not be guaranteed
+and either user may be reported as ranked above the other until another game has been
+played.
+
+##Game Order of Operations:
+Players must first register with an email address and name using
+the /user endpoint prior to playing a game. Once two players have been
+created a game can be started by calling the new_game endpoint with both
+users' names and a freak factor. Keep track of the urlsafe_game_key for subsequent calls.
+After that users will take turns making moves by posting to the game/{urlsafe_game_key} endpoint
+the row and column of the move and their name. That endpoint will return the current state of the game
+which you may also retreive at any time by querying the game/{urlsafe_game_key} endpoint.
+Once a user has created a sequence of the winning length or if all moves are exhausted and
+the game is a draw the game_over flag will be set and no further moves can be made.
+The wins/losses are recorded for each user and are retrievable by querying
+the scores/user/{user_name} endpoint for a single user's score or the user/rankings endpoint for
+the entire list ordered by ranking.
 
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.

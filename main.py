@@ -43,6 +43,7 @@ class IncrementActiveGames(webapp2.RequestHandler):
 
     @staticmethod
     def post():
+        """This method which is called via the task queue increments the number of active games in cache"""
         TicTacToeApi.increment_active_games()
 
 
@@ -50,6 +51,7 @@ class DecrementActiveGames(webapp2.RequestHandler):
 
     @staticmethod
     def post():
+        """This method which is called via the task queue decrements the number of active games in cache"""
         TicTacToeApi.decrement_active_games()
 
 
