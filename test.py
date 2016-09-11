@@ -9,7 +9,11 @@ game = Game()
 game.winning_length = 3
 game.cols = 4
 game.rows = 5
-game.board = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+game.board = [[1, 0, 0, 0],
+              [0, 1, 0, 0],
+              [0, 0, 1, 0],
+              [0, 0, 0, 0],
+              [0, 0, 0, 0]]
 game.whos_turn = 1
 is_won = game.check_did_win(1, 2, 2)
 is_draw = game.check_is_draw()
@@ -24,12 +28,19 @@ game = Game()
 game.winning_length = 5
 game.cols = 4
 game.rows = 5
-game.board = [[1, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2]]
+game.board = [[1, 2, 1, 2],
+              [2, 1, 2, 1],
+              [1, 2, 1, 2],
+              [2, 1, 2, 1],
+              [1, 2, 1, 2]]
 game.whos_turn = 1
 is_won = game.check_did_win(1, 2, 2)
 is_draw = game.check_is_draw()
 
 print '{} - {}'.format(is_won, is_draw)
 
-assert is_won is False, "Game was supposed to be a draw and is showing that a player won"
-assert is_draw is True, "Game was supposed to be a draw and is not reflecting this"
+assert is_won is False,\
+    "Game was supposed to be a draw and is showing that a player won"
+
+assert is_draw is True,\
+    "Game was supposed to be a draw and is not reflecting this"

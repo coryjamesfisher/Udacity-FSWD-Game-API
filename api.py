@@ -12,8 +12,8 @@ from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
 
 from models import User, Game, Score, GameHistory
-from models import StringMessage, NewGameForm, GameForm, GameForms, MakeMoveForm,\
-    ScoreForms
+from models import StringMessage, NewGameForm, GameForm, GameForms,\
+    MakeMoveForm, ScoreForms
 from utils import get_by_urlsafe
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
@@ -22,7 +22,8 @@ GAME_REQUEST = endpoints.ResourceContainer(
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm,
     urlsafe_game_key=messages.StringField(1),)
-CREATE_USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1), email=messages.StringField(2))
+CREATE_USER_REQUEST = endpoints.ResourceContainer(
+    user_name=messages.StringField(1), email=messages.StringField(2))
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
 
 MEMCACHE_NUM_ACTIVE_GAMES = 'NUM_ACTIVE_GAMES'
@@ -67,7 +68,9 @@ class TicTacToeApi(remote.Service):
                 'Player two "' + request.player_two_name + '" does not exist!'
             )
 
-        game = Game.new_game(player_one.key, player_two.key, request.freak_factor)
+        game = Game.new_game(player_one.key,
+                             player_two.key,
+                             request.freak_factor)
 
         # Increment active count of games
         taskqueue.add(url='/tasks/increment_active_games')
@@ -104,8 +107,10 @@ class TicTacToeApi(remote.Service):
         if game.game_over:
             return game.to_form('Game already over!')
 
-        if (game.whos_turn == 1 and game.player_one.get().name != request.player_name) or \
-           (game.whos_turn == 2 and game.player_two.get().name != request.player_name):
+        if (game.whos_turn == 1 and
+                game.player_one.get().name != request.player_name) or \
+           (game.whos_turn == 2 and
+                game.player_two.get().name != request.player_name):
             return game.to_form('Please wait your turn!')
 
         try:
@@ -117,7 +122,8 @@ class TicTacToeApi(remote.Service):
 
         if game.game_over is True:
             taskqueue.add(url='/tasks/decrement_active_games')
-            message = "Thank you for playing. " + request.player_name + " has won the game."
+            message = "Thank you for playing. " + \
+                      request.player_name + " has won the game."
         else:
             message = "Move accepted. Please wait for your next turn."
 
@@ -170,7 +176,9 @@ class TicTacToeApi(remote.Service):
             raise endpoints.NotFoundException(
                 'User name is required')
         games = Game.query(
-            ndb.AND(ndb.OR(Game.player_one == user.key, Game.player_two == user.key), Game.game_over == False))
+            ndb.AND(ndb.OR(Game.player_one == user.key,
+                           Game.player_two == user.key),
+                    Game.game_over == False))
         return GameForms(items=[game.to_form() for game in games])
 
     @endpoints.method(response_message=StringMessage,
@@ -189,7 +197,8 @@ class TicTacToeApi(remote.Service):
         else:
             print "already had cached_games"
 
-        return StringMessage(message="Found " + str(cached_num_games) + " active games.")
+        return StringMessage(message="Found " +
+                                     str(cached_num_games) + " active games.")
 
     @endpoints.method(request_message=GAME_REQUEST,
                       response_message=StringMessage,
@@ -202,7 +211,8 @@ class TicTacToeApi(remote.Service):
             raise endpoints.NotFoundException('Game not found!')
 
         if game.game_over is True:
-            raise endpoints.ForbiddenException('You can not cancel this game as it is already over!')
+            raise endpoints.ForbiddenException(
+                'You can not cancel this game as it is already over!')
 
         # Save the game.
         # A game with no winner and with game_over=True is a cancelled game.

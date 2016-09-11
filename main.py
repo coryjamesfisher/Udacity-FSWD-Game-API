@@ -14,8 +14,8 @@ class SendReminderEmail(webapp2.RequestHandler):
 
     @staticmethod
     def get():
-        """Send a reminder email to the user who's turn it is for each game that is active.
-        Called every hour using a cron job"""
+        """Send a reminder email to the user who's turn it is for
+        each game that is active. Called every hour using a cron job"""
         app_id = app_identity.get_application_id()
 
         # Get all in progress games
@@ -31,7 +31,8 @@ class SendReminderEmail(webapp2.RequestHandler):
             # If the user has an email send them a little reminder
             if user.email is not None:
                 subject = 'Freaky TicTacToe Reminder'
-                body = 'Hello {}, it is currently your turn in the game [ {} ]. Please return to the game.' \
+                body = 'Hello {}, it is currently your turn in the ' + \
+                       'game [ {} ]. Please return to the game.' \
                     .format(user.name, game.key.urlsafe())
                 mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
                                user.email,
@@ -43,7 +44,8 @@ class IncrementActiveGames(webapp2.RequestHandler):
 
     @staticmethod
     def post():
-        """This method which is called via the task queue increments the number of active games in cache"""
+        """This method which is called via the task queue
+        increments the number of active games in cache"""
         TicTacToeApi.increment_active_games()
 
 
@@ -51,7 +53,8 @@ class DecrementActiveGames(webapp2.RequestHandler):
 
     @staticmethod
     def post():
-        """This method which is called via the task queue decrements the number of active games in cache"""
+        """This method which is called via the task queue
+        decrements the number of active games in cache"""
         TicTacToeApi.decrement_active_games()
 
 

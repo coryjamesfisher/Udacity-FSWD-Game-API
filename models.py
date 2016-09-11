@@ -78,17 +78,20 @@ class Game(ndb.Model):
         board = self.board
 
         if row + 1 > len(board) or col + 1 > len(board[0]):
-            raise ValueError("You can not move here. That's not even a spot on the board!")
+            raise ValueError(
+                "You can not move here. That's not even a spot on the board!")
 
         if board[row][col] != 0:
-            raise ValueError("You can not move here. This space is already taken!")
+            raise ValueError(
+                "You can not move here. This space is already taken!")
 
         # Mark the move on the board
         board[row][col] = self.whos_turn
         self.board = board
 
         if self.check_did_win(self.whos_turn, row, col):
-            self.winner = self.player_one if self.whos_turn == 1 else self.player_two
+            self.winner = self.player_one \
+                if self.whos_turn == 1 else self.player_two
             if self.whos_turn == 1:
                 self.end_game(self.player_one, self.player_two)
             else:
@@ -193,7 +196,8 @@ class Game(ndb.Model):
         form.urlsafe_key = self.key.urlsafe()
         form.player_one_name = self.player_one.get().name
         form.player_two_name = self.player_two.get().name
-        form.winner_name = self.winner.get().name if self.winner is not None else ""
+        form.winner_name = self.winner.get().name \
+            if self.winner is not None else ""
         form.freak_factor = self.freak_factor
         form.rows = self.rows
         form.cols = self.cols
@@ -205,7 +209,8 @@ class Game(ndb.Model):
         return form
 
     def end_game(self, winner=None, loser=None):
-        """Ends the game and records the scores - if winner is None then the game is a tie"""
+        """Ends the game and records the scores
+        If winner is None then the game is a tie"""
         self.game_over = True
         self.winner = winner
 
@@ -237,7 +242,8 @@ class Score(ndb.Model):
     def to_form(self):
 
         player_name = self.key.parent().get().name
-        return ScoreForm(player_name=player_name, wins=self.wins, losses=self.losses, ties=self.ties)
+        return ScoreForm(player_name=player_name, wins=self.wins,
+                         losses=self.losses, ties=self.ties)
 
 
 class GameHistory(ndb.Model):
