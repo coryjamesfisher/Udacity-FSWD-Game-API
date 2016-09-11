@@ -1,4 +1,4 @@
-#Full Stack Nanodegree Project 4 Refresh
+#FSND Extreme Tic Tac Toe API
 
 ## Set-Up Instructions:
 1.  Update the value of application in app.yaml to the app ID you have registered
@@ -73,12 +73,11 @@ the entire list ordered by ranking.
  - **new_game**
     - Path: 'game'
     - Method: POST
-    - Parameters: user_name, min, max, attempts
+    - Parameters: player_one_name, player_two_name, freak_factor
     - Returns: GameForm with initial game state.
-    - Description: Creates a new Game. user_name provided must correspond to an
-    existing user - will raise a NotFoundException if not. Min must be less than
-    max. Also adds a task to a task queue to update the average moves remaining
-    for active games.
+    - Description: Creates a new Game. player_one_name & player_two_name provided must correspond to an
+    existing user - will raise a NotFoundException if not. freak_factor must be an integer.
+    Also adds a task to a task queue to increment the number of active games.
      
  - **get_game**
     - Path: 'game/{urlsafe_game_key}'
@@ -90,10 +89,13 @@ the entire list ordered by ranking.
  - **make_move**
     - Path: 'game/{urlsafe_game_key}'
     - Method: PUT
-    - Parameters: urlsafe_game_key, guess
+    - Parameters: urlsafe_game_key, player_name, move_row, move_col
     - Returns: GameForm with new game state.
-    - Description: Accepts a 'guess' and returns the updated state of the game.
-    If this causes a game to end, a corresponding Score entity will be created.
+    - Description: Accepts a move from the player who's turn it is and
+    returns the updated state of the game. Raises a ValueError if the move is invalid.
+    Also adds a task to a task queue to decrement the number of active games
+    if the game has ended. Note: All move history is recorded so that a game
+    could be replayed turn by turn.
     
  - **get_scores**
     - Path: 'scores'
@@ -110,35 +112,70 @@ the entire list ordered by ranking.
     - Description: Returns all Scores recorded by the provided player (unordered).
     Will raise a NotFoundException if the User does not exist.
     
- - **get_active_game_count**
-    - Path: 'games/active'
+ - **get_user_rankings**
+    - Path: 'user/rankings'
+    - Method: GET
+    - Parameters: None
+    - Returns: ScoreForms.
+    - Description: Returns user scores in order from highest to lowest.
+    
+ - **get_user_games**
+    - Path: 'user/games'
+    - Method: GET
+    - Parameters: user_name
+    - Returns: GameForms
+    - Description: Returns all of users active games.
+    
+ - **get_num_active_games**
+    - Path: 'games/active_games'
     - Method: GET
     - Parameters: None
     - Returns: StringMessage
-    - Description: Gets the average number of attempts remaining for all games
-    from a previously cached memcache key.
-
+    - Description: Gets the number of active games from a previously cached memcache key.
+    
+ - **cancel_game**
+    - Path: 'games/{urlsafe_game_key}/cancel'
+    - Method: POST
+    - Parameters: urlsafe_game_key
+    - Returns: StringMessage
+    - Description: Cancels an active game that has not been completed.
+    Adds a task to the taskqueue to decrement number of active games.
+    Raises a NotFoundException if the game does not exist.
+    Raises a ForbiddenException if the game is already over.
+    
+ - **game_history**
+    - Path: 'games/{urlsafe_game_key}/history'
+    - Method: GET
+    - Parameters: urlsafe_game_key
+    - Returns: GameForms
+    - Description: Returns the history of a game as an array of GameForms.
+    Raises a NotFoundException if the game does not exist.
+    
 ##Models Included:
  - **User**
     - Stores unique user_name and (optional) email address.
     
  - **Game**
-    - Stores unique game states. Associated with User model via KeyProperty.
+    - Stores unique game states. Associated with User model via player_one_name and player_two_name.
     
  - **Score**
-    - Records completed games. Associated with Users model via KeyProperty.
+    - Records completed games. Associated with Users model by ancestry.
+    
+ - **Game History**
+    - Records the state of the game over time. Associated with game by ancestry.
     
 ##Forms Included:
  - **GameForm**
-    - Representation of a Game's state (urlsafe_key, attempts_remaining,
-    game_over flag, message, user_name).
+    - Representation of a Game's state (urlsafe_key, player_one_name, player_two_name, freak_factor,
+    rows, cols, winning_length, whos_turn, board, game_over, message, winner_name).
+ - **GameForms**
+    - Multiple GameForm container.
  - **NewGameForm**
-    - Used to create a new game (user_name, min, max, attempts)
+    - Used to create a new game (player_one_name, player_two_name, freak_factor)
  - **MakeMoveForm**
-    - Inbound make move form (guess).
+    - Inbound make move form (player_name, move_row, move_col).
  - **ScoreForm**
-    - Representation of a completed game's Score (user_name, date, won flag,
-    guesses).
+    - Representation of a completed game's Score (player_name, wins, losses, ties).
  - **ScoreForms**
     - Multiple ScoreForm container.
  - **StringMessage**

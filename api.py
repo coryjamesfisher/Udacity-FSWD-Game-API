@@ -67,11 +67,7 @@ class TicTacToeApi(remote.Service):
                 'Player two "' + request.player_two_name + '" does not exist!'
             )
 
-        try:
-            game = Game.new_game(player_one.key, player_two.key, request.freak_factor)
-
-        except ValueError:
-            raise endpoints.BadRequestException('You two already have a game together')
+        game = Game.new_game(player_one.key, player_two.key, request.freak_factor)
 
         # Increment active count of games
         taskqueue.add(url='/tasks/increment_active_games')
@@ -213,7 +209,18 @@ class TicTacToeApi(remote.Service):
         game.game_over = True
         game.put()
 
-        return StringMessage(message="The game was cancelled successfully.")
+        # Decrement active games
+        taskqueue.add(url='/tasks/decrement_active_games')
+
+        message = "The game was cancelled successfuly."
+
+        # Update game history
+        game_history = GameHistory.query(ancestor=game.key).get()
+        game_history.history.append(game)
+        game_history.messages.append(message)
+        game_history.put()
+
+        return StringMessage(message=message)
 
     @endpoints.method(request_message=GAME_REQUEST,
                       response_message=GameForms,
