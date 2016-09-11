@@ -1,0 +1,49 @@
+Design Decisions
+
+Handling of Active Games Count
+- I decided to use tasks to handle the incrementing and decrementing of
+the number of active games. I did this because the record was likely to
+be updated far more often than any single game and I didn't want to have
+any slow/blocking operations during normal gameplay.
+- I decided to store the number of active games in memcache because of the
+speed of data access.
+- I decided NOT to store the summary of the number of active games in the
+database because it would likely be slower than keeping it in memcache and
+keeping it in sync by queuing up tasks rather than allowing the potential
+for multiple writes at once.
+
+Preserving Game State
+- I decided to store the game board as a JSON property so that it would be
+flexible enough to handle any number of rows & columns.
+- I included a Freak Factor in the game creation endpoint to mix things up
+a little, since standard tic-tac-toe can be pretty boring.
+- I decided to use key properties to relate player 1, 2, and the winning player
+for easy referencing to get player details.
+- The PickleProperty made it super easy to store snapshots of the actual Game
+state object into a GameHistory. That made handling the history just like handling
+multiple game states.
+- I chose to store game_over as a Boolean property, which makes it really easy
+to determine which games are still active.
+
+Preserving User Scores
+- I decided to separate the Score structure from the User because often you will
+want to get user info without score info & vice versa.
+- This summarization of the users win/loss/tie record made it super simple to  query
+for the "best players" on the rankings endpoint.
+
+Turn Reminder
+- The cronjob system that app engine implements is fantastic. It allowed me to easily
+query for all of the games that were active and send email reminders to the users' who's turn
+it was.
+
+Design Decisions I would Have Done Differently
+- If this was going to be an on going effort to make a game I would have probably changed the following:
+1. I would have moved game_configuration to a separate table so that they could be reused instead
+of storing the configuration separately for each game.
+2. I would move the game logic out of the model and into a service class. This would make
+it easier to extend/modify logic and make it easier to unit test.
+3. I would have considered storing the game board as an array of bitmasks. This might make the
+footprint of the data smaller.
+4. I would have used oauth for user authentication or at bare minimum basic password auth.
+5. I would have created plugins so that others could modify the logic without knowing every
+detail of how the game works.
