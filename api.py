@@ -204,7 +204,7 @@ class TicTacToeApi(remote.Service):
                       response_message=StringMessage,
                       path='games/{urlsafe_game_key}/cancel',
                       name='cancel_game',
-                      http_method='POST')
+                      http_method='PUT')
     def cancel_game(self, request):
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if not game:

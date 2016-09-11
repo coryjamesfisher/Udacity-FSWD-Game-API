@@ -135,7 +135,7 @@ the entire list ordered by ranking.
     
  - **cancel_game**
     - Path: 'games/{urlsafe_game_key}/cancel'
-    - Method: POST
+    - Method: PUT
     - Parameters: urlsafe_game_key
     - Returns: StringMessage
     - Description: Cancels an active game that has not been completed.

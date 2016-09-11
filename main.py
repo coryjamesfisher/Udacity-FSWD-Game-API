@@ -31,8 +31,7 @@ class SendReminderEmail(webapp2.RequestHandler):
             # If the user has an email send them a little reminder
             if user.email is not None:
                 subject = 'Freaky TicTacToe Reminder'
-                body = 'Hello {}, it is currently your turn in the ' + \
-                       'game [ {} ]. Please return to the game.' \
+                body = 'Hello {}, it is currently your turn in the game [ {} ]. Please return to the game.'\
                     .format(user.name, game.key.urlsafe())
                 mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
                                user.email,
